@@ -18,46 +18,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dependants = isset($_POST['dependants']) ? $_POST['dependants'] : '';
         $answer = isset($_POST['answer']) ? $_POST['answer'] : '';
 
-        // Kiểm tra và tạo file Excel nếu chưa tồn tại
-        $excelFile = 'cljoc-event.xlsx';
-        if (!file_exists($excelFile)) {
-            $spreadsheet = new Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
-            $sheet->setCellValue('A1', 'Staff Name');
-            $sheet->setCellValue('B1', 'Title');
-            $sheet->setCellValue('C1', 'Department');
-            $sheet->setCellValue('D1', 'Telephone');
-            $sheet->setCellValue('E1', 'Dependants - DOB');
-            $sheet->setCellValue('F1', 'Answer');
-        } else {
-            // Nếu file tồn tại, mở nó để thêm dữ liệu mới
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($excelFile);
-            $sheet = $spreadsheet->getActiveSheet();
-        }
+        // // Kiểm tra và tạo file Excel nếu chưa tồn tại
+        // $excelFile = 'cljoc-event.xlsx';
+        // if (!file_exists($excelFile)) {
+        //     $spreadsheet = new Spreadsheet();
+        //     $sheet = $spreadsheet->getActiveSheet();
+        //     $sheet->setCellValue('A1', 'Staff Name');
+        //     $sheet->setCellValue('B1', 'Title');
+        //     $sheet->setCellValue('C1', 'Department');
+        //     $sheet->setCellValue('D1', 'Telephone');
+        //     $sheet->setCellValue('E1', 'Dependants - DOB');
+        //     $sheet->setCellValue('F1', 'Answer');
+        // } else {
+        //     // Nếu file tồn tại, mở nó để thêm dữ liệu mới
+        //     $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($excelFile);
+        //     $sheet = $spreadsheet->getActiveSheet();
+        // }
 
-        // Thêm dữ liệu mới vào file Excel
-        $lastRow = $sheet->getHighestRow() + 1;
-        $sheet->setCellValue('A' . $lastRow, $name);
-        $sheet->setCellValue('B' . $lastRow, $title);
-        $sheet->setCellValue('C' . $lastRow, $department);
-        $sheet->setCellValue('D' . $lastRow, $phone);
-        $sheet->setCellValue('E' . $lastRow, $dependants);
-        $sheet->setCellValue('F' . $lastRow, $answer);
+        // // Thêm dữ liệu mới vào file Excel
+        // $lastRow = $sheet->getHighestRow() + 1;
+        // $sheet->setCellValue('A' . $lastRow, $name);
+        // $sheet->setCellValue('B' . $lastRow, $title);
+        // $sheet->setCellValue('C' . $lastRow, $department);
+        // $sheet->setCellValue('D' . $lastRow, $phone);
+        // $sheet->setCellValue('E' . $lastRow, $dependants);
+        // $sheet->setCellValue('F' . $lastRow, $answer);
 
-        // Lưu file Excel
-        $writer = new Xlsx($spreadsheet);
-        $writer->save($excelFile);
+        // // Lưu file Excel
+        // $writer = new Xlsx($spreadsheet);
+        // $writer->save($excelFile);
 
-        // Lưu file Excel
-        $writer = new Xlsx($spreadsheet);
-        $writer->save($excelFile);
+        // // Lưu file Excel
+        // $writer = new Xlsx($spreadsheet);
+        // $writer->save($excelFile);
 
         // Connect to MSSQL and insert into the database
-        $serverName = "DESKTOP-5DJ8EQQ";
+        $serverName = "APPLAB01";
         $connectionOptions = array(
             "Database" => "Registration_Form",
-            "Uid" => "vanh",
-            "PWD" => "vanh"
+            "Uid" => "sa",
+            "PWD" => "sa",
+            "CharacterSet" => "UTF-8"
         );
 
         $conn = sqlsrv_connect($serverName, $connectionOptions);
@@ -111,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="uk-container uk-container-center">
                 <div class="logo uk-text-center img-scaledown"><img src="/resources/img/logo.png" alt=""></div>
-                <h1 class="heading-1 uk-text-center"><span>Year and party</span></h1>
+                <h1 class="heading-1 uk-text-center"><span>Year-End Party</span></h1>
                 <h2 class="time uk-text-center"><span>13 Jan 2024</span></h2>
                 <div class="clock uk-text-center img-scaledown"><img src="/resources/img/oclock.png" alt=""></div>
                 <h2 class="title uk-text-center"><span>INVITATION</span></h2>
@@ -139,13 +140,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
                 <div class="address">
-                    <h3 class="small-title uk-text-center"><span>Adress</span></h3>
+                    <h3 class="small-title uk-text-center"><span>Address</span></h3>
                     <h2 class="title uk-text-center"><span>GEM CENTER</span></h2>
                     <div class="address-detail uk-text-center">08 Nguyen Binh Khiem, Da Kao, District 1, HCMC</div>
                 </div>
                 <div class="line  img-scaledown"><img src="/resources/img/line.png" alt=""></div>
                 <div class="timeline">
-                    <h2 class="title uk-text-center"><span>Time line</span></h2>
+                    <h2 class="title uk-text-center"><span>Timeline</span></h2>
                     <div class="uk-grid uk-grid-large">
                         <div class="uk-width-1-2">
                             <div class="time-left uk-text-right">
@@ -171,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                 </div>
                                 <div class="time-container">
-                                    <div class="time-start">20:00 to Closing</div>
+                                    <div class="time-start">20:00 to The End</div>
                                     <div class="time-img uk-flex uk-flex-right">
                                       <div class="time-img-item img-scaledown"><img src="/resources/img/8.png" alt=""></div>
                                       <div class="time-img-item img-scaledown"><img src="/resources/img/9.png" alt=""></div>
@@ -187,20 +188,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <h4 class="title"><span>Welcome</span></h4>
                                     <ul class="uk-clearfix timelist">
                                         <li>Traditional games for kids</li>
-                                        <li>Photo booth activities</li>
+                                        <li>Photobooth activities</li>
                                         <li>Company highlights review</li>
                                     </ul>
                                 </div>
                                 <div class="time-container">
                                     <h4 class="title"><span>Appreciation & Party Program</span></h4>
-                                    <ul class="uk-clearfix timelist time-list-2" style="padding-top: 24px;padding-bottom:24px;">
-                                        <li>Openning performance.</li>
+                                    <ul class="uk-clearfix timelist time-list-2" style="padding-top: 22px;padding-bottom:22px;">
+                                        <li>Opening performance.</li>
                                         <li>2023 activities summary & orientation of 2024 work programs.</li>
                                         <li>Employee appreciation for individuals.</li>
                                         <!-- <li>Art performance contest with theme: "Cuu Long đạp gió, rẽ sóng".</li> -->
                                         <li>Toasting moment - Party Announcement.</li>
                                         <li>Celebration party.</li>
-                                        <li>Magic performances and games.</li>
+                                        <!-- <li>Music.</li> -->
                                         <!-- <li>Speech from appreciated employee.</li> -->
                                         <li>Game shows/ Magic and circus shows for family.</li>
                                         <!-- <li>Art performance contest result.</li> -->
@@ -222,7 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="uk-width-small-1-1 uk-width-medium-1-2">
                             <div class="content ">
                                 <h2 class="title uk-text-center"><span>Join Us?</span></h2>
-                                <div class="description uk-text-center">Cuu Long Year End Party will be more complete <br> with your presence. Please confirm your  <br> participation so we can welcome you and your  <br> family in the most thorough way! <br> <br> Please register before 03-Jan-23.</div>
+                                <div class="description uk-text-center">Cuu Long Year End Party will be more complete <br> with your presence. Please confirm your  <br> participation so we can welcome you and your  <br> family in the most thorough way! <br> <br> Please register before 03-Jan-24.</div>
                                 <div class="uk-text-right">Best regards.</div>
                             </div>
                         </div>
@@ -280,7 +281,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             cao nhat minh - 1990
                                         </div> -->
                                     </label>
-                                    <textarea cols="30" rows="10" name="dependants" id="dependants" placeholder="Example: Cao Van A - 1989"></textarea>
+                                    <textarea cols="30" rows="10" name="dependants" id="dependants" placeholder="Please list the people who will go with you and their Year of Birth. Example: Cao Van An - 2020"></textarea>
                                 </div>
                                 <!-- <div class="form-field uk-flex mb20 form-radio-va">
                                     <input type="radio" name="answer" id="opt1" value="yes" required>
@@ -307,6 +308,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <source src="" type="audio/mpeg">
             </audio>
         </div>
+        <div class="fix-total">
+  <div class="relative">
+    <img src="/resources/img/total.png" alt="" />
+    <div class="total-fixed">
+      Number of Registered People:
+      <br />
+      <span>25-Dec-2023: <strong>424</strong></span>
+    </div>
+  </div>
+</div>
         <script src="node_modules/toastify-js/src/toastify.js"></script>
         <script>
             document.getElementById('dependants').addEventListener('input', function() {
