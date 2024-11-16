@@ -2,6 +2,9 @@
 
 require 'vendor/autoload.php';
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if it's an AJAX request
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
@@ -15,71 +18,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dependants = isset($_POST['dependants']) ? $_POST['dependants'] : '';
         $answer = isset($_POST['answer']) ? $_POST['answer'] : '';
 
-        // // Kiểm tra và tạo file Excel nếu chưa tồn tại
-        // $excelFile = 'cljoc-event.xlsx';
-        // if (!file_exists($excelFile)) {
-        //     $spreadsheet = new Spreadsheet();
-        //     $sheet = $spreadsheet->getActiveSheet();
-        //     $sheet->setCellValue('A1', 'Staff Name');
-        //     $sheet->setCellValue('B1', 'Title');
-        //     $sheet->setCellValue('C1', 'Department');
-        //     $sheet->setCellValue('D1', 'Telephone');
-        //     $sheet->setCellValue('E1', 'Dependants - DOB');
-        //     $sheet->setCellValue('F1', 'Answer');
-        // } else {
-        //     // Nếu file tồn tại, mở nó để thêm dữ liệu mới
-        //     $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($excelFile);
-        //     $sheet = $spreadsheet->getActiveSheet();
-        // }
-
-        // // Thêm dữ liệu mới vào file Excel
-        // $lastRow = $sheet->getHighestRow() + 1;
-        // $sheet->setCellValue('A' . $lastRow, $name);
-        // $sheet->setCellValue('B' . $lastRow, $title);
-        // $sheet->setCellValue('C' . $lastRow, $department);
-        // $sheet->setCellValue('D' . $lastRow, $phone);
-        // $sheet->setCellValue('E' . $lastRow, $dependants);
-        // $sheet->setCellValue('F' . $lastRow, $answer);
-
-        // // Lưu file Excel
-        // $writer = new Xlsx($spreadsheet);
-        // $writer->save($excelFile);
-
-        // // Lưu file Excel
-        // $writer = new Xlsx($spreadsheet);
-        // $writer->save($excelFile);
-
-        // Connect to MSSQL and insert into the database
-        $serverName = "APPLAB01";
-        $connectionOptions = array(
-            "Database" => "Registration_Form",
-            "Uid" => "sa",
-            "PWD" => "sa",
-            "CharacterSet" => "UTF-8"
-        );
-
-        $conn = sqlsrv_connect($serverName, $connectionOptions);
-
-        if ($conn) {
-            $sql = "INSERT INTO registration (staff_name, title, department, phone, dependent, answer, created_on)
-                    VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
-            $params = array($name, $title, $department, $phone, $dependants, $answer);
-            $stmt = sqlsrv_query($conn, $sql, $params);
-
-            if ($stmt) {
-                // Insertion successful
-                echo json_encode(['success' => true, 'message' => 'You have successfully confirmed!']);
-            } else {
-                // Insertion failed
-                echo json_encode(['success' => false, 'message' => 'Error inserting data into the database!']);
-            }
-
-            sqlsrv_close($conn);
+        // Kiểm tra và tạo file Excel nếu chưa tồn tại
+        $excelFile = 'cljoc-event.xlsx';
+        if (!file_exists($excelFile)) {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setCellValue('A1', 'Staff Name');
+            $sheet->setCellValue('B1', 'Title');
+            $sheet->setCellValue('C1', 'Department');
+            $sheet->setCellValue('D1', 'Telephone');
+            $sheet->setCellValue('E1', 'Dependants - DOB');
+            $sheet->setCellValue('F1', 'Answer');
         } else {
-            // Connection failed
-            echo json_encode(['success' => false, 'message' => 'Error connecting to the database!']);
+            // Nếu file tồn tại, mở nó để thêm dữ liệu mới
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($excelFile);
+            $sheet = $spreadsheet->getActiveSheet();
         }
 
+        // Thêm dữ liệu mới vào file Excel
+        $lastRow = $sheet->getHighestRow() + 1;
+        $sheet->setCellValue('A' . $lastRow, $name);
+        $sheet->setCellValue('B' . $lastRow, $title);
+        $sheet->setCellValue('C' . $lastRow, $department);
+        $sheet->setCellValue('D' . $lastRow, $phone);
+        $sheet->setCellValue('E' . $lastRow, $dependants);
+        $sheet->setCellValue('F' . $lastRow, $answer);
+
+        // Lưu file Excel
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($excelFile);
+
+        // Return a JSON response for AJAX
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'You have successfully confirmed!']);
         exit;
     } else {
         echo json_encode(['success' => false, 'message' => 'An error occurred, please try again!']);
@@ -105,237 +76,303 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
     <div class="homepage">
-        <div class="top-bg">
-            <img src="/resources/img/b1.png" alt="">
-            <img src="/resources/img/b2.png" alt="">
-        </div>
         <div class="uk-container uk-container-center">
-            <div class="logo uk-text-center img-scaledown"><img src="/resources/img/logo.png" alt=""></div>
-            <h1 class="heading-1 uk-text-center"><span>Year-End Party</span></h1>
-            <h2 class="time uk-text-center"><span>13 Jan 2024</span></h2>
-            <div class="clock uk-text-center img-scaledown"><img src="/resources/img/oclock.png" alt=""></div>
-            <h2 class="title uk-text-center"><span>INVITATION</span></h2>
-            <div class="description uk-text-center">Come celebrate with us as we ring in the Year End Party</div>
-            <div class="block uk-text-center">
-                <div class="uk-grid uk-grid-collapse">
-                    <div class=" uk-width-1-3">
-                        <div class="block-item">
-                            <h3 class="title"><span>Time</span></h3>
-                            <div class="number">16:30</div>
-                        </div>
-                    </div>
-                    <div class=" uk-width-1-3">
-                        <div class="block-item">
-                            <h3 class="title"><span>Date</span></h3>
-                            <div class="number">13</div>
-                        </div>
-                    </div>
-                    <div class=" uk-width-1-3">
-                        <div class="block-item">
-                            <h3 class="title"><span>Month</span></h3>
-                            <div class="number">01.2024</div>
-                        </div>
+            <div class="uk-grid uk-grid-collapse">
+                <div class="uk-width-small-1-1 uk-width-medium-1-2" style="text-align: center;">
+                    <div class="text">
+                        <img src="/resources/img/TEXTTTT.png" alt="">
                     </div>
                 </div>
-            </div>
-            <div class="address">
-                <h3 class="small-title uk-text-center"><span>Address</span></h3>
-                <h2 class="title uk-text-center"><span>GEM CENTER</span></h2>
-                <div class="address-detail uk-text-center">08 Nguyen Binh Khiem, Da Kao, District 1, HCMC</div>
-            </div>
-            <div class="line  img-scaledown"><img src="/resources/img/line.png" alt=""></div>
-            <div class="timeline">
-                <h2 class="title uk-text-center"><span>Timeline</span></h2>
-                <div class="uk-grid uk-grid-large">
-                    <div class="uk-width-1-2">
-                        <div class="time-left uk-text-right">
-                            <div class="time-container">
-                                <div class="time-start">16:30 - 17:30</div>
-                                <div class="time-img uk-flex uk-flex-right">
-                                    <div class="time-img-item img-scaledown"><img src="/resources/img/1.png" alt=""></div>
-                                    <div class="time-img-item img-scaledown"><img src="/resources/img/2.png" alt=""></div>
-                                    <div class="time-img-item img-scaledown"><img src="/resources/img/3.png" alt=""></div>
-                                </div>
-                            </div>
-                            <div class="time-container">
-                                <div class="time-start">17:30 - 20:00</div>
-                                <div class="time-img ">
-                                    <div class="uk-flex uk-flex-right">
-                                        <div class="time-img-item img-scaledown mb30"><img src="/resources/img/4.png" alt=""></div>
-                                        <div class="time-img-item img-scaledown mb30"><img src="/resources/img/5.png" alt=""></div>
-                                    </div>
-                                    <div class="uk-flex uk-flex-right">
-                                        <div class="time-img-item img-scaledown mb30"><img src="/resources/img/6.png" alt=""></div>
-                                        <div class="time-img-item img-scaledown mb30"><img src="/resources/img/7.png" alt=""></div>
+                <div class="uk-width-small-1-1 uk-width-medium-1-2 relative">
+                    <div class="invitation"><img src="/resources/img/invitation.png" alt=""></div>
+                    <div class="timeline">
+                        <div class="uk-grid uk-grid-large">
+                            <div class="uk-width-2-5">
+                                <div class="time-left uk-text-right">
+                                    <div class="time-container">
+                                        <div class="time-start">17:30 - 18:15</div>
+                                        <div class="time-img uk-flex uk-flex-right">
+                                            <div class="time-img-item img-scaledown"><img src="/resources/img/1.png" alt=""></div>
+                                            <div class="time-img-item img-scaledown"><img src="/resources/img/2.png" alt=""></div>
+                                            <div class="time-img-item img-scaledown"><img src="/resources/img/3.png" alt=""></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="time-container">
-                                <div class="time-start">20:00 to The End</div>
-                                <div class="time-img uk-flex uk-flex-right">
-                                    <div class="time-img-item img-scaledown"><img src="/resources/img/8.png" alt=""></div>
-                                    <div class="time-img-item img-scaledown"><img src="/resources/img/9.png" alt=""></div>
-                                    <div class="time-img-item img-scaledown"><img src="/resources/img/10.png" alt=""></div>
+                            <div class="uk-width-3-5 time-right-wrap">
+                                <div class="time-right uk-text-left">
+                                    <div class="time-container">
+                                        <h4 class="title"><span>Welcome</span></h4>
+                                        <ul class="uk-clearfix timelist">
+                                            <li>Traditional games for kids</li>
+                                            <li>Photo booth activities</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <div class="timeline">
+                        <div class="uk-grid uk-grid-large">
+                            <div class="uk-width-2-5">
+                                <div class="time-left uk-text-right">
+                                    <div class="time-container">
+                                        <div class="time-start">18:15 - 20:45</div>
+                                        <div class="time-img">
+                                            <div class="uk-flex uk-flex-right" style="padding-right: 35px;">
+                                                <div class="time-img-item img-scaledown mb30"><img src="/resources/img/4.png" alt=""></div>
+                                                <div class="time-img-item img-scaledown mb30"><img src="/resources/img/5.png" alt=""></div>
+                                            </div>
+                                            <div class="uk-flex uk-flex-right">
+                                                <div class="time-img-item img-scaledown"><img src="/resources/img/8.png" alt=""></div>
+                                                <div class="time-img-item-2 img-scaledown"><img src="/resources/img/thia.png" alt=""></div>
+                                                <div class="time-img-item img-scaledown"><img src="/resources/img/6.png" alt=""></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="uk-width-3-5 time-right-wrap">
+                                <div class="time-right uk-text-left">
+                                    <div class="time-container">
+                                        <h4 class="title"><span>Appreciation & Party Program</span></h4>
+                                        <ul class="uk-clearfix timelist">
+                                            <li>Openning performance.</li>
+                                            <li>GM Speech on 2024 activities & 2025 work programs.</li>
+                                            <li>Company highlights (ten initiative events of 2024).</li>
+                                            <li>Toasting moment - Party Announcement.</li>
+                                            <li>Party celebration.</li>
+                                            <li>Lucky Draw.</li>
+                                            <li>Magic performances and games, entertaiment.</li>
+                                            <li>Other Activities.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="timeline">
+                        <div class="uk-grid uk-grid-large">
+                            <div class="uk-width-2-5">
+                                <div class="time-left uk-text-right">
+                                    <div class="time-container">
+                                        <div class="time-start">20:45 to Closing</div>
+                                        <div class="time-img uk-flex uk-flex-right">
 
+                                            <div class="time-img-item img-scaledown"><img src="/resources/img/9.png" alt=""></div>
+                                            <div class="time-img-item img-scaledown"><img src="/resources/img/10.png" alt=""></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="uk-width-3-5 time-right-wrap">
+                                <div class="time-right uk-text-left">
+                                    <div class="time-container">
+                                        <h4 class="title"><span>After Party Session </span></h4>
+                                        <ul class="uk-clearfix timelist">
+                                            <li>Karaoke, Song, Music Performance</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="uk-width-1-2">
-                        <div class="time-right uk-text-left">
-                            <div class="time-container">
-                                <h4 class="title"><span>Welcome</span></h4>
-                                <ul class="uk-clearfix timelist">
-                                    <li>Traditional games for kids</li>
-                                    <li>Photobooth activities</li>
-                                    <li>Company highlights review</li>
-                                </ul>
+                    <div class="contact">
+                        <div class="uk-grid uk-grid-small">
+                            <div class="uk-width-small-1-1 uk-width-medium-1-2">
+                                <div class="content ">
+                                    <div class="content-img"><img src="/resources/img/Join Us_.png" alt=""></div>
+                                    <div class="description uk-text-center">Cuu Long Year End Party will be more complete <br> with your presence. Please confirm your <br> participation so we can welcome you and your <br> family in the most thorough way!</div>
+                                    <div class="uk-text-right">Best regards</div>
+                                </div>
                             </div>
-                            <div class="time-container">
-                                <h4 class="title"><span>Appreciation & Party Program</span></h4>
-                                <ul class="uk-clearfix timelist time-list-2" style="padding-top: 22px;padding-bottom:22px;">
-                                    <li>Opening performance.</li>
-                                    <li>2023 activities summary & orientation of 2024 work programs.</li>
-                                    <li>Employee appreciation for individuals.</li>
-                                    <!-- <li>Art performance contest with theme: "Cuu Long đạp gió, rẽ sóng".</li> -->
-                                    <li>Toasting moment - Party Announcement.</li>
-                                    <li>Celebration party.</li>
-                                    <!-- <li>Music.</li> -->
-                                    <!-- <li>Speech from appreciated employee.</li> -->
-                                    <li>Game shows/ Magic and circus shows for family.</li>
-                                    <!-- <li>Art performance contest result.</li> -->
-                                    <li>Lucky Draw.</li>
-                                </ul>
-                            </div>
-                            <div class="time-container">
-                                <h4 class="title"><span>After Party Session </span></h4>
-                                <ul class="uk-clearfix timelist">
-                                    <li>Karaoke, Song performance, Art performance ...</li>
-                                </ul>
+                            <div class="uk-width-small-1-1 uk-width-medium-1-2">
+                                <form action="" method="post">
+                                    <div class="uk-grid uk-grid-medium">
+                                        <div class="uk-width-1-2">
+                                            <div class="uk-grid uk-grid-medium">
+                                                <div class="uk-width-3-5 mb20">
+                                                    <div class="form-field">
+                                                        <label for="">Staff name</label>
+                                                        <input type="text" required id="name" name="name">
+                                                    </div>
+                                                </div>
+                                                <div class="uk-width-2-5 mb20">
+                                                    <div class="form-field">
+                                                        <label for="">Email </label>
+                                                        <input type="text" required id="Email" name="Email">
+                                                    </div>
+                                                </div>
+                                                <div class="uk-width-3-5 ">
+                                                    <div class="form-field">
+                                                        <label for="">Department</label>
+                                                        <input type="text" required id="department" name="department">
+                                                    </div>
+                                                </div>
+                                                <div class="uk-width-2-5 ">
+                                                    <div class="form-field">
+                                                        <label for="">Telephone</label>
+                                                        <input type="text" required id="phone" name="phone">
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="uk-width-1-2">
+                                            <div class="form-field">
+                                                <label for="">Dependants - DOB</label>
+                                                <textarea id="limitedTextarea" rows="8" name="dependants" style="resize: none; overflow: hidden;"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="btn-submit" id="submitBtn">Feedback</button>
+
+                                    <!-- <div class="form-field uk-flex mb20 form-radio-va">
+                                        <input type="radio" name="answer" id="opt1" value="yes" required>
+                                        <label for="opt1" class="label1" style="margin-right: 15px">
+                                            <span>Yes</span>
+                                        </label>
+                                        <input type="radio" name="answer" id="opt2" value="no" required>
+                                        <label for="opt2" class="label2">
+                                            <span>No</span>
+                                        </label>
+                                    </div> -->
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="contact">
-                <div class="uk-grid uk-grid-large">
-                    <div class="uk-width-small-1-1 uk-width-medium-1-2">
-                        <div class="content ">
-                            <h2 class="title uk-text-center"><span>Join Us?</span></h2>
-                            <div class="description uk-text-center">Cuu Long Year End Party will be more complete <br> with your presence. Please confirm your <br> participation so we can welcome you and your <br> family in the most thorough way! <br> <br> Please register before 03-Jan-24.</div>
-                            <div class="uk-text-right">Best regards.</div>
+        </div>
+    </div>
+    <div style="height: 0; width: 0; position: absolute; visibility: hidden;">
+        <svg xmlns="http://www.w3.org/2000/svg">
+            <symbol id="icon-play" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+            </symbol>
+            <symbol id="icon-pause" viewBox="0 0 24 24">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </symbol>
+            <symbol id="icon-close" viewBox="0 0 24 24">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+            </symbol>
+            <symbol id="icon-settings" viewBox="0 0 24 24">
+                <path
+                    d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
+            </symbol>
+            <symbol id="icon-sound-on" viewBox="0 0 24 24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+            </symbol>
+            <symbol id="icon-sound-off" viewBox="0 0 24 24">
+                <path
+                    d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+            </symbol>
+        </svg>
+    </div>
+
+    <!-- App -->
+    <!-- <div class="container-firework">
+        <div class="loading-init">
+            <div class="loading-init__header">Loading</div>
+            <div class="loading-init__status">Assembling Shells</div>
+        </div>
+        <div class="stage-container remove">
+            <div class="canvas-container">
+                <canvas id="trails-canvas"></canvas>
+                <canvas id="main-canvas"></canvas>
+            </div>
+            <div class="controls">
+                <div class="btn pause-btn">
+                    <svg fill="white" width="24" height="24"><use href="#icon-pause" xlink:href="#icon-pause"></use></svg>
+                </div>
+                <div class="btn sound-btn">
+                    <svg fill="white" width="24" height="24"><use href="#icon-sound-off" xlink:href="#icon-sound-off"></use></svg>
+                </div>
+                <div class="btn settings-btn">
+                    <svg fill="white" width="24" height="24"><use href="#icon-settings" xlink:href="#icon-settings"></use></svg>
+                </div>
+            </div>
+            <div class="menu hide">
+                <div class="menu__inner-wrap">
+                    <div class="btn btn--bright close-menu-btn">
+                        <svg fill="white" width="24" height="24"><use href="#icon-close" xlink:href="#icon-close"></use></svg>
+                    </div>
+                    <div class="menu__header">Settings</div>
+                    <div class="menu__subheader">For more info, click any label.</div>
+                    <form>
+                        <div class="form-option form-option--select">
+                            <label class="shell-type-label">Shell Type</label>
+                            <select class="shell-type"></select>
                         </div>
-                    </div>
-                    <div class="uk-width-small-1-1 uk-width-medium-1-2">
-                        <form action="" method="post" style="padding-left: 50px" id="formRequest">
-                            <div class="uk-grid uk-grid-medium">
-                                <div class="uk-width-1-2 mb20">
-                                    <div class="form-field">
-                                        <label for="">Staff name</label>
-                                        <input type="text" required id="name" name="name">
-                                    </div>
-                                </div>
-                                <div class="uk-width-1-2 mb20">
-                                    <div class="form-field">
-                                        <label for="">Title</label>
-                                        <div>
-                                            <input type="text" required id="title" name="title">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="uk-width-1-2 ">
-                                    <div class="form-field">
-                                        <label for="">Department</label>
-                                        <div>
-                                            <select required id="department" name="department">
-                                                <option value="Administration">Administration</option>
-                                                <option value="Operation">Operation</option>
-                                                <option value="Finance&Accounting">Finance&Accounting</option>
-                                                <option value="Procurement">Procurement</option>
-                                                <option value="Sub-surface">Sub-surface</option>
-                                                <option value="Development">Development</option>
-                                                <option value="HSE">HSE</option>
-                                                <option value="OPR-STV">OPR-STV</option>
-                                                <option value="OPR-STD">OPR-STD</option>
-                                                <option value="OPR-STT">OPR-STT</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="uk-width-1-2 ">
-                                    <div class="form-field">
-                                        <label for="">Telephone</label>
-                                        <input type="text" required id="phone" name="phone">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-field mt20 mb30">
-                                <label for="">
-                                    Dependants name - Year of birth
-                                    <!-- <div class="description-dob" id="descriptionDob">
-                                            Ex:
-                                            <br> 
-                                            cao nhat minh - 1989
-                                            <br>
-                                            cao nhat minh - 1990
-                                        </div> -->
-                                </label>
-                                <textarea cols="30" rows="10" name="dependants" id="dependants" placeholder="Please list the people who will go with you and their Year of Birth. Example: Cao Van An - 2020"></textarea>
-                            </div>
-                            <!-- <div class="form-field uk-flex mb20 form-radio-va">
-                                    <input type="radio" name="answer" id="opt1" value="yes" required>
-                                    <label for="opt1" class="label1" style="margin-right: 15px">
-                                        <span>Yes</span>
-                                    </label>
-                                    <input type="radio" name="answer" id="opt2" value="no" required>
-                                    <label for="opt2" class="label2">
-                                        <span>No</span>
-                                    </label>
-                                </div> -->
-                            <button class="btn-submit" id="submitBtn">Register</button>
-                        </form>
-                    </div>
+                        <div class="form-option form-option--select">
+                            <label class="shell-size-label">Shell Size</label>
+                            <select class="shell-size"></select>
+                        </div>
+                        <div class="form-option form-option--select">
+                            <label class="quality-ui-label">Quality</label>
+                            <select class="quality-ui"></select>
+                        </div>
+                        <div class="form-option form-option--select">
+                            <label class="sky-lighting-label">Sky Lighting</label>
+                            <select class="sky-lighting"></select>
+                        </div>
+                        <div class="form-option form-option--select">
+                            <label class="scaleFactor-label">Scale</label>
+                            <select class="scaleFactor"></select>
+                        </div>
+                        <div class="form-option form-option--checkbox">
+                            <label class="auto-launch-label">Auto Fire</label>
+                            <input class="auto-launch" type="checkbox" />
+                        </div>
+                        <div class="form-option form-option--checkbox form-option--finale-mode">
+                            <label class="finale-mode-label">Finale Mode</label>
+                            <input class="finale-mode" type="checkbox" />
+                        </div>
+                        <div class="form-option form-option--checkbox">
+                            <label class="hide-controls-label">Hide Controls</label>
+                            <input class="hide-controls" type="checkbox" />
+                        </div>
+                        <div class="form-option form-option--checkbox form-option--fullscreen">
+                            <label class="fullscreen-label">Fullscreen</label>
+                            <input class="fullscreen" type="checkbox" />
+                        </div>
+                        <div class="form-option form-option--checkbox">
+                            <label class="long-exposure-label">Open Shutter</label>
+                            <input class="long-exposure" type="checkbox" />
+                        </div>
+                    </form>
+                    <div class="credits">Passionately built by <a href="https://cmiller.tech/" target="_blank">Caleb Miller</a>.</div>
                 </div>
             </div>
         </div>
-        <div class="bot-bg">
-            <img src="/resources/img/b3.png" alt="">
-            <img src="/resources/img/b4.png" alt="">
-            <img src="/resources/img/b5.png" alt="">
-        </div>
-        <audio autoplay style="display:none" loop>
-            <source src="" type="audio/mpeg">
-        </audio>
-    </div>
-    <div class="fix-total">
-        <div class="relative">
-            <img src="/resources/img/total.png" alt="" />
-            <div class="total-fixed">
-                Number of Registered People:
-                <br />
-                <span>25-Dec-2023: <strong>424</strong></span>
+        <div class="help-modal">
+            <div class="help-modal__overlay"></div>
+            <div class="help-modal__dialog">
+                <div class="help-modal__header"></div>
+                <div class="help-modal__body"></div>
+                <button type="button" class="help-modal__close-btn">Close</button>
             </div>
         </div>
-    </div>
+    </div> -->
+
     <script src="node_modules/toastify-js/src/toastify.js"></script>
+    <!--  <script src="resources/js/fscreen.js"></script>
+    <script src="resources/js/Stage.js"></script>
+    <script src="resources/js/MyMath.js"></script>
+    <script src="resources/js/firework.js"></script> -->
     <script>
-        document.getElementById('dependants').addEventListener('input', function() {
-            var dependantsTextarea = document.getElementById('dependants');
-            var descriptionDob = document.getElementById('descriptionDob');
+        $(document).ready(function() {
+            const maxLines = 8;
 
-            if (dependantsTextarea && descriptionDob) {
-                dependantsTextarea.addEventListener('input', function() {
-                    if (dependantsTextarea.value.trim() !== '') {
-                        descriptionDob.style.display = 'none';
-                    } else {
-                        descriptionDob.style.display = 'block';
-                    }
-                });
-            } else {
-                console.log('Could not find elements with the specified IDs');
-            }
+            $('#limitedTextarea').on('input', function() {
+                const lines = $(this).val().split('\n');
+
+                if (lines.length > maxLines) {
+                    $(this).val(lines.slice(0, maxLines).join('\n'));
+                }
+            });
         });
-
 
         document.getElementById('submitBtn').addEventListener('click', function(event) {
             event.preventDefault();
@@ -346,19 +383,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         function validateForm() {
             var name = document.getElementById('name').value.trim();
-            var title = document.getElementById('title').value.trim();
+            var Email = document.getElementById('Email').value.trim();
             var department = document.getElementById('department').value.trim();
             var phone = document.getElementById('phone').value.trim();
             // var answerYes = document.getElementById('opt1').checked;
             // var answerNo = document.getElementById('opt2').checked;
-
+            var emailRegex = /^[a-zA-Z0-9._%+-]+@cljoc\.com\.vn$/;
             if (name === '') {
                 alert('Please enter Staff name.');
                 return false;
             }
 
-            if (title === '') {
-                alert('Please enter Title.');
+            if (!emailRegex.test(Email)) {
+                alert('Please enter a valid Email with domain cljoc.com.vn.');
                 return false;
             }
 
@@ -413,14 +450,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             console.log(data)
 
             if (data.success) {
-                var form = document.getElementById('formRequest')
                 // Handle success
-                for (var i = 0; i < form.elements.length; i++) {
-                    var element = form.elements[i]
-                    if (element.tagName === "INPUT" || element.tagName === "SELECT" || element.tagName === "TEXTAREA") {
-                        element.value = ""
-                    }
-                }
                 Toastify({
                     text: data.message,
                     duration: 3000,
