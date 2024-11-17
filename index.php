@@ -317,7 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="fix-total">
         <div class="relative">
-            <img src="/resources/img/total.png" alt="" />
+            <img src="resources/img/total.png" alt="" />
             <div class="total-fixed">
                 Number of Registered People:
                 <br />

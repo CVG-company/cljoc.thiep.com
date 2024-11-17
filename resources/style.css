@@ -819,6 +819,23 @@ body *{
 
 .fix-total{
     position: fixed;
-    bottom: 50px;
+z-index: 199999;
+bottom: 50px;
     left: -200px;
+}
+
+.relative{
+position:relative;
+}
+
+.total-fixed{
+position: absolute;
+top: 50%;
+transform: translateY(-50%);
+left: 230px;
+line-height: 1.3;
+}
+
+.total-fixed span strong {
+font-size: 28px;
 }
