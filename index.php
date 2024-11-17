@@ -262,15 +262,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </div>
 
                                             </div>
+                                            <button class="btn-submit" id="submitBtn">Feedback</button>
                                         </div>
                                         <div class="uk-width-2-5">
                                             <div class="form-field">
                                                 <label for="">Dependants - DOB</label>
-                                                <textarea id="limitedTextarea" rows="8" name="dependants" style="resize: none; overflow: hidden;"></textarea>
+                                                <div class="relative" id="input-container">
+                                                    <input type="text" required id="phone" name="dependants">
+                                                    <!-- <textarea id="limitedTextarea" rows="8" name="dependants" style="resize: none; overflow: hidden;"></textarea> -->
+                                                    <button class="butn add-btn" type="button">
+                                                        <svg width="15px" height="15px" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                                                            <g id="Home-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                                <g id="1-Home" transform="translate(-583.000000, -280.000000)" fill="#fff" stroke="#fff">
+                                                                    <polygon id="+" points="591.264706 286.735294 597 286.735294 597 288.264706 591.264706 288.264706 591.264706 294 589.735294 294 589.735294 288.264706 584 288.264706 584 286.735294 589.735294 286.735294 589.735294 281 591.264706 281"></polygon>
+                                                                </g>
+                                                            </g>
+                                                        </svg>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <button class="btn-submit" id="submitBtn">Feedback</button>
 
                                     <!-- <div class="form-field uk-flex mb20 form-radio-va">
                                         <input type="radio" name="answer" id="opt1" value="yes" required>
@@ -330,6 +342,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="resources/sweet.js"></script>
 
     <script>
+        $(document).ready(function() {
+            const maxInputs = 3;
+            $(document).on('click', '.add-btn', function() {
+                const currentInputs = $('#input-container .input-group').length;
+                if (currentInputs < maxInputs) {
+                    const newInputGroup = `
+                    <div class="input-group mt10">
+                        <input type="text" required name="dependants">
+                        <button class="butn remove-btn" type="button" aria-label="Xóa điểm dừng">
+                            <svg width="15px" height="15px" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                                <g id="Home-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                    <g id="1-Home" transform="translate(-583.000000, -280.000000)" fill="#fff" stroke="#fff">
+                                        <polygon id="+" points="591.264706 286.735294 597 286.735294 597 288.264706 591.264706 288.264706 591.264706 294 589.735294 294 589.735294 288.264706 584 288.264706 584 286.735294 589.735294 286.735294 589.735294 281 591.264706 281"></polygon>
+                                    </g>
+                                </g>
+                            </svg>
+                        </button>
+                    </div>
+                    `;
+                    $('#input-container').append(newInputGroup);
+
+                }
+
+            });
+
+            // Sự kiện click cho nút xóa (-)
+            $(document).on('click', '.remove-btn', function() {
+                // Xóa input-group hiện tại
+                $(this).closest('.input-group').remove();
+            });
+        });
+
         $(document).ready(function() {
             const maxLines = 8;
 
