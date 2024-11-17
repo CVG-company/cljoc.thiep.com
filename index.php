@@ -2,6 +2,9 @@
 
 require 'vendor/autoload.php';
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if it's an AJAX request
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
@@ -14,36 +17,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
         $dependants = isset($_POST['dependants']) ? $_POST['dependants'] : '';
         $answer = isset($_POST['answer']) ? $_POST['answer'] : '';
+        $ip = $_SERVER['REMOTE_ADDR'];
 
         // Kiểm tra và tạo file Excel nếu chưa tồn tại
-        // $excelFile = 'cljoc-event.xlsx';
-        // if (!file_exists($excelFile)) {
-        //     $spreadsheet = new Spreadsheet();
-        //     $sheet = $spreadsheet->getActiveSheet();
-        //     $sheet->setCellValue('A1', 'Staff Name');
-        //     $sheet->setCellValue('B1', 'Title');
-        //     $sheet->setCellValue('C1', 'Department');
-        //     $sheet->setCellValue('D1', 'Telephone');
-        //     $sheet->setCellValue('E1', 'Dependants - DOB');
-        //     $sheet->setCellValue('F1', 'Created On');
-        // } else {
-        //     // Nếu file tồn tại, mở nó để thêm dữ liệu mới
-        //     $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($excelFile);
-        //     $sheet = $spreadsheet->getActiveSheet();
-        // }
+        $excelFile = 'cljoc-event.xlsx';
+        if (!file_exists($excelFile)) {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setCellValue('A1', 'Staff Name');
+            $sheet->setCellValue('B1', 'Title');
+            $sheet->setCellValue('C1', 'Department');
+            $sheet->setCellValue('D1', 'Telephone');
+            $sheet->setCellValue('E1', 'Dependants - DOB');
+            $sheet->setCellValue('F1', 'IP');
+            $sheet->setCellValue('G1', 'Created On');
+        } else {
+            // Nếu file tồn tại, mở nó để thêm dữ liệu mới
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($excelFile);
+            $sheet = $spreadsheet->getActiveSheet();
+        }
 
-        // // Thêm dữ liệu mới vào file Excel
-        // $lastRow = $sheet->getHighestRow() + 1;
-        // $sheet->setCellValue('A' . $lastRow, $name);
-        // $sheet->setCellValue('B' . $lastRow, $title);
-        // $sheet->setCellValue('C' . $lastRow, $department);
-        // $sheet->setCellValue('D' . $lastRow, $phone);
-        // $sheet->setCellValue('E' . $lastRow, $dependants);
-        // $sheet->setCellValue('F' . $lastRow, gmdate('Y-m-d H:i:s', time() + 7*3600));
+        // Thêm dữ liệu mới vào file Excel
+        $lastRow = $sheet->getHighestRow() + 1;
+        $sheet->setCellValue('A' . $lastRow, $name);
+        $sheet->setCellValue('B' . $lastRow, $title);
+        $sheet->setCellValue('C' . $lastRow, $department);
+        $sheet->setCellValue('D' . $lastRow, $phone);
+        $sheet->setCellValue('E' . $lastRow, $dependants);
+        $sheet->setCellValue('F' . $lastRow, $ip);
+        $sheet->setCellValue('G' . $lastRow, gmdate('Y-m-d H:i:s', time() + 7 * 3600));
 
         // // Lưu file Excel
-        // $writer = new Xlsx($spreadsheet);
-        // $writer->save($excelFile);
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($excelFile);
 
         $serverName = "APPLAB01";
         $connectionOptions = array(
@@ -56,9 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn = sqlsrv_connect($serverName, $connectionOptions);
 
         if ($conn) {
-            $sql = "INSERT INTO registration (staff_name, title, department, phone, dependent, answer, created_on)
+            $sql = "INSERT INTO registration (staff_name, title, department, phone, dependent, answer, ip, created_on)
                     VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
-            $params = array($name, $title, $department, $phone, $dependants, $answer);
+            $params = array($name, $title, $department, $phone, $dependants, $answer, $ip);
             $stmt = sqlsrv_query($conn, $sql, $params);
 
             if ($stmt) {
@@ -93,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="resources/uikit/css/uikit.modify.css">
     <link rel="stylesheet" href="resources/uikit/css/uikit.modify.css">
     <link rel="stylesheet" type="text/css" href="node_modules/toastify-js/src/toastify.css">
+    <link rel="stylesheet" href="resources/sweet.css">
     <link rel="stylesheet" href="resources/style.css">
     <script src="resources/library/js/jquery.js"></script>
 </head>
@@ -102,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="uk-container uk-container-center">
             <div class="uk-grid uk-grid-collapse">
                 <div class="uk-width-small-1-1 uk-width-medium-1-2" style="text-align: center;">
-                    <div class="text">
+                    <div class="text bling-overlay">
                         <img src="/resources/img/TEXTTTT.png" alt="">
                     </div>
                 </div>
@@ -222,14 +229,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </div>
                                                 <div class="uk-width-1-2 mb20">
                                                     <div class="form-field">
-                                                        <label for="">Email </label>
+                                                        <label for="">Company Email</label>
                                                         <input type="text" required id="Email" name="Email">
                                                     </div>
                                                 </div>
                                                 <div class="uk-width-1-2 ">
                                                     <div class="form-field">
                                                         <label for="">Department</label>
-                                                        <input type="text" required id="department" name="department">
+                                                        <div>
+                                                            <select required id="department" name="department">
+                                                                <option value="Administration">Administration</option>
+                                                                <option value="Operation">Operation</option>
+                                                                <option value="Finance&Accounting">Finance&Accounting</option>
+                                                                <option value="Procurement">Procurement</option>
+                                                                <option value="Sub-surface">Sub-surface</option>
+                                                                <option value="Development">Development</option>
+                                                                <option value="HSE">HSE</option>
+                                                                <option value="OPR-STV">OPR-STV</option>
+                                                                <option value="OPR-STD">OPR-STD</option>
+                                                                <option value="OPR-STT">OPR-STT</option>
+                                                                <option value="OPR-VungTauBase">OPR-VungTauBase</option>
+                                                            </select>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="uk-width-1-2 ">
@@ -294,96 +315,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </svg>
     </div>
 
-    <!-- App -->
-    <!-- <div class="container-firework">
-        <div class="loading-init">
-            <div class="loading-init__header">Loading</div>
-            <div class="loading-init__status">Assembling Shells</div>
-        </div>
-        <div class="stage-container remove">
-            <div class="canvas-container">
-                <canvas id="trails-canvas"></canvas>
-                <canvas id="main-canvas"></canvas>
-            </div>
-            <div class="controls">
-                <div class="btn pause-btn">
-                    <svg fill="white" width="24" height="24"><use href="#icon-pause" xlink:href="#icon-pause"></use></svg>
-                </div>
-                <div class="btn sound-btn">
-                    <svg fill="white" width="24" height="24"><use href="#icon-sound-off" xlink:href="#icon-sound-off"></use></svg>
-                </div>
-                <div class="btn settings-btn">
-                    <svg fill="white" width="24" height="24"><use href="#icon-settings" xlink:href="#icon-settings"></use></svg>
-                </div>
-            </div>
-            <div class="menu hide">
-                <div class="menu__inner-wrap">
-                    <div class="btn btn--bright close-menu-btn">
-                        <svg fill="white" width="24" height="24"><use href="#icon-close" xlink:href="#icon-close"></use></svg>
-                    </div>
-                    <div class="menu__header">Settings</div>
-                    <div class="menu__subheader">For more info, click any label.</div>
-                    <form>
-                        <div class="form-option form-option--select">
-                            <label class="shell-type-label">Shell Type</label>
-                            <select class="shell-type"></select>
-                        </div>
-                        <div class="form-option form-option--select">
-                            <label class="shell-size-label">Shell Size</label>
-                            <select class="shell-size"></select>
-                        </div>
-                        <div class="form-option form-option--select">
-                            <label class="quality-ui-label">Quality</label>
-                            <select class="quality-ui"></select>
-                        </div>
-                        <div class="form-option form-option--select">
-                            <label class="sky-lighting-label">Sky Lighting</label>
-                            <select class="sky-lighting"></select>
-                        </div>
-                        <div class="form-option form-option--select">
-                            <label class="scaleFactor-label">Scale</label>
-                            <select class="scaleFactor"></select>
-                        </div>
-                        <div class="form-option form-option--checkbox">
-                            <label class="auto-launch-label">Auto Fire</label>
-                            <input class="auto-launch" type="checkbox" />
-                        </div>
-                        <div class="form-option form-option--checkbox form-option--finale-mode">
-                            <label class="finale-mode-label">Finale Mode</label>
-                            <input class="finale-mode" type="checkbox" />
-                        </div>
-                        <div class="form-option form-option--checkbox">
-                            <label class="hide-controls-label">Hide Controls</label>
-                            <input class="hide-controls" type="checkbox" />
-                        </div>
-                        <div class="form-option form-option--checkbox form-option--fullscreen">
-                            <label class="fullscreen-label">Fullscreen</label>
-                            <input class="fullscreen" type="checkbox" />
-                        </div>
-                        <div class="form-option form-option--checkbox">
-                            <label class="long-exposure-label">Open Shutter</label>
-                            <input class="long-exposure" type="checkbox" />
-                        </div>
-                    </form>
-                    <div class="credits">Passionately built by <a href="https://cmiller.tech/" target="_blank">Caleb Miller</a>.</div>
-                </div>
+    <div class="fix-total">
+        <div class="relative">
+            <img src="/resources/img/total.png" alt="" />
+            <div class="total-fixed">
+                Number of Registered People:
+                <br />
+                <span>02-Jan-2024: <strong>670</strong></span>
             </div>
         </div>
-        <div class="help-modal">
-            <div class="help-modal__overlay"></div>
-            <div class="help-modal__dialog">
-                <div class="help-modal__header"></div>
-                <div class="help-modal__body"></div>
-                <button type="button" class="help-modal__close-btn">Close</button>
-            </div>
-        </div>
-    </div> -->
+    </div>
 
     <script src="node_modules/toastify-js/src/toastify.js"></script>
-    <!--  <script src="resources/js/fscreen.js"></script>
-    <script src="resources/js/Stage.js"></script>
-    <script src="resources/js/MyMath.js"></script>
-    <script src="resources/js/firework.js"></script> -->
+    <script src="resources/sweet.js"></script>
+
     <script>
         $(document).ready(function() {
             const maxLines = 8;
@@ -475,25 +420,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (data.success) {
                 // Handle success
                 $('form')[0].reset();
-                Toastify({
-                    text: data.message,
-                    duration: 3000,
-                    newWindow: true,
-                    close: true,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
-                }).showToast();
+                swal("Success", data.message, "success");
             } else {
-                Toastify({
-                    text: data.message,
-                    duration: 3000,
-                    newWindow: true,
-                    close: true,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: "linear-gradient(to right, #e74c3c, #c0392b)",
-                }).showToast();
+                swal("Error", data.message, "error");
+
             }
         }
     </script>
