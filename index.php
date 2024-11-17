@@ -2,9 +2,6 @@
 
 require 'vendor/autoload.php';
 
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if it's an AJAX request
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
@@ -19,38 +16,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $answer = isset($_POST['answer']) ? $_POST['answer'] : '';
 
         // Kiểm tra và tạo file Excel nếu chưa tồn tại
-        $excelFile = 'cljoc-event.xlsx';
-        if (!file_exists($excelFile)) {
-            $spreadsheet = new Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
-            $sheet->setCellValue('A1', 'Staff Name');
-            $sheet->setCellValue('B1', 'Title');
-            $sheet->setCellValue('C1', 'Department');
-            $sheet->setCellValue('D1', 'Telephone');
-            $sheet->setCellValue('E1', 'Dependants - DOB');
-            $sheet->setCellValue('F1', 'Answer');
+        // $excelFile = 'cljoc-event.xlsx';
+        // if (!file_exists($excelFile)) {
+        //     $spreadsheet = new Spreadsheet();
+        //     $sheet = $spreadsheet->getActiveSheet();
+        //     $sheet->setCellValue('A1', 'Staff Name');
+        //     $sheet->setCellValue('B1', 'Title');
+        //     $sheet->setCellValue('C1', 'Department');
+        //     $sheet->setCellValue('D1', 'Telephone');
+        //     $sheet->setCellValue('E1', 'Dependants - DOB');
+        //     $sheet->setCellValue('F1', 'Created On');
+        // } else {
+        //     // Nếu file tồn tại, mở nó để thêm dữ liệu mới
+        //     $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($excelFile);
+        //     $sheet = $spreadsheet->getActiveSheet();
+        // }
+
+        // // Thêm dữ liệu mới vào file Excel
+        // $lastRow = $sheet->getHighestRow() + 1;
+        // $sheet->setCellValue('A' . $lastRow, $name);
+        // $sheet->setCellValue('B' . $lastRow, $title);
+        // $sheet->setCellValue('C' . $lastRow, $department);
+        // $sheet->setCellValue('D' . $lastRow, $phone);
+        // $sheet->setCellValue('E' . $lastRow, $dependants);
+        // $sheet->setCellValue('F' . $lastRow, gmdate('Y-m-d H:i:s', time() + 7*3600));
+
+        // // Lưu file Excel
+        // $writer = new Xlsx($spreadsheet);
+        // $writer->save($excelFile);
+
+        $serverName = "APPLAB01";
+        $connectionOptions = array(
+            "Database" => "Registration_Form",
+            "Uid" => "sa",
+            "PWD" => "sa",
+            "CharacterSet" => "UTF-8"
+        );
+
+        $conn = sqlsrv_connect($serverName, $connectionOptions);
+
+        if ($conn) {
+            $sql = "INSERT INTO registration (staff_name, title, department, phone, dependent, answer, created_on)
+                    VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
+            $params = array($name, $title, $department, $phone, $dependants, $answer);
+            $stmt = sqlsrv_query($conn, $sql, $params);
+
+            if ($stmt) {
+                // Insertion successful
+                echo json_encode(['success' => true, 'message' => 'You have successfully confirmed!']);
+            } else {
+                // Insertion failed
+                echo json_encode(['success' => false, 'message' => 'Error inserting data into the database!']);
+            }
+
+            sqlsrv_close($conn);
         } else {
-            // Nếu file tồn tại, mở nó để thêm dữ liệu mới
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($excelFile);
-            $sheet = $spreadsheet->getActiveSheet();
+            // Connection failed
+            echo json_encode(['success' => false, 'message' => 'Error connecting to the database!']);
         }
-
-        // Thêm dữ liệu mới vào file Excel
-        $lastRow = $sheet->getHighestRow() + 1;
-        $sheet->setCellValue('A' . $lastRow, $name);
-        $sheet->setCellValue('B' . $lastRow, $title);
-        $sheet->setCellValue('C' . $lastRow, $department);
-        $sheet->setCellValue('D' . $lastRow, $phone);
-        $sheet->setCellValue('E' . $lastRow, $dependants);
-        $sheet->setCellValue('F' . $lastRow, $answer);
-
-        // Lưu file Excel
-        $writer = new Xlsx($spreadsheet);
-        $writer->save($excelFile);
-
-        // Return a JSON response for AJAX
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'message' => 'You have successfully confirmed!']);
         exit;
     } else {
         echo json_encode(['success' => false, 'message' => 'An error occurred, please try again!']);
@@ -71,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="resources/uikit/css/uikit.modify.css">
     <link rel="stylesheet" type="text/css" href="node_modules/toastify-js/src/toastify.css">
     <link rel="stylesheet" href="resources/style.css">
-    <script src="/resources/library/js/jquery.js"></script>
+    <script src="resources/library/js/jquery.js"></script>
 </head>
 
 <body>
@@ -177,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         </div>
                     </div>
-                    <div class="contact">
+                    <div class="contact" style="margin-left: -150px;">
                         <div class="uk-grid uk-grid-small">
                             <div class="uk-width-small-1-1 uk-width-medium-1-2">
                                 <div class="content ">
@@ -189,27 +212,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="uk-width-small-1-1 uk-width-medium-1-2">
                                 <form action="" method="post">
                                     <div class="uk-grid uk-grid-medium">
-                                        <div class="uk-width-1-2">
+                                        <div class="uk-width-3-5">
                                             <div class="uk-grid uk-grid-medium">
-                                                <div class="uk-width-3-5 mb20">
+                                                <div class="uk-width-1-2 mb20">
                                                     <div class="form-field">
                                                         <label for="">Staff name</label>
                                                         <input type="text" required id="name" name="name">
                                                     </div>
                                                 </div>
-                                                <div class="uk-width-2-5 mb20">
+                                                <div class="uk-width-1-2 mb20">
                                                     <div class="form-field">
                                                         <label for="">Email </label>
                                                         <input type="text" required id="Email" name="Email">
                                                     </div>
                                                 </div>
-                                                <div class="uk-width-3-5 ">
+                                                <div class="uk-width-1-2 ">
                                                     <div class="form-field">
                                                         <label for="">Department</label>
                                                         <input type="text" required id="department" name="department">
                                                     </div>
                                                 </div>
-                                                <div class="uk-width-2-5 ">
+                                                <div class="uk-width-1-2 ">
                                                     <div class="form-field">
                                                         <label for="">Telephone</label>
                                                         <input type="text" required id="phone" name="phone">
@@ -219,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                             </div>
                                         </div>
-                                        <div class="uk-width-1-2">
+                                        <div class="uk-width-2-5">
                                             <div class="form-field">
                                                 <label for="">Dependants - DOB</label>
                                                 <textarea id="limitedTextarea" rows="8" name="dependants" style="resize: none; overflow: hidden;"></textarea>
@@ -451,6 +474,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (data.success) {
                 // Handle success
+                $('form')[0].reset();
                 Toastify({
                     text: data.message,
                     duration: 3000,
