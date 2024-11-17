@@ -5,6 +5,8 @@ require 'vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
+$countDependent = getCountDependent();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if it's an AJAX request
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
@@ -15,9 +17,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = isset($_POST['title']) ? $_POST['title'] : '';
         $department = isset($_POST['department']) ? $_POST['department'] : '';
         $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
-        $dependants = isset($_POST['dependants']) ? $_POST['dependants'] : '';
+        $dependants = isset($_POST['dependants']) ? $_POST['dependants'] : [];
         $answer = isset($_POST['answer']) ? $_POST['answer'] : '';
         $ip = $_SERVER['REMOTE_ADDR'];
+        $dependantText = '';
+        if (isset($dependants) && is_array($dependants) && count($dependants)) {
+            foreach ($dependants as $key => $value) {
+                if (empty($value)) {
+                    unset($dependants[$key]);
+                    continue;
+                }
+                $dependantText .= ($key != 0 ? ' | ' : '') . $value;
+            }
+        }
 
         // Kiểm tra và tạo file Excel nếu chưa tồn tại
         $excelFile = 'cljoc-event.xlsx';
@@ -43,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sheet->setCellValue('B' . $lastRow, $title);
         $sheet->setCellValue('C' . $lastRow, $department);
         $sheet->setCellValue('D' . $lastRow, $phone);
-        $sheet->setCellValue('E' . $lastRow, $dependants);
+        $sheet->setCellValue('E' . $lastRow, $dependantText);
         $sheet->setCellValue('F' . $lastRow, $ip);
         $sheet->setCellValue('G' . $lastRow, gmdate('Y-m-d H:i:s', time() + 7 * 3600));
 
@@ -51,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $writer = new Xlsx($spreadsheet);
         $writer->save($excelFile);
 
-        $serverName = "APPLAB01";
+        $serverName = "MAY-20240306LJN";
         $connectionOptions = array(
             "Database" => "Registration_Form",
             "Uid" => "sa",
@@ -62,29 +74,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn = sqlsrv_connect($serverName, $connectionOptions);
 
         if ($conn) {
-            $sql = "INSERT INTO registration (staff_name, title, department, phone, dependent, answer, ip, created_on)
-                    VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
-            $params = array($name, $title, $department, $phone, $dependants, $answer, $ip);
+            $sql = "INSERT INTO registration (staff_name, title, department, phone, dependent, answer, ip, count_dependent, created_on)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE())";
+            $params = array($name, $title, $department, $phone, $dependantText, $answer, $ip, (string)count($dependants));
             $stmt = sqlsrv_query($conn, $sql, $params);
 
             if ($stmt) {
                 // Insertion successful
-                echo json_encode(['success' => true, 'message' => 'You have successfully confirmed!']);
+                echo json_encode(['success' => true, 'message' => 'You have successfully confirmed!', 'count' => getCountDependent()]);
             } else {
                 // Insertion failed
-                echo json_encode(['success' => false, 'message' => 'Error inserting data into the database!']);
+                echo json_encode(['success' => false, 'message' => 'An error occurred, please try again 1!']);
             }
 
             sqlsrv_close($conn);
         } else {
             // Connection failed
-            echo json_encode(['success' => false, 'message' => 'Error connecting to the database!']);
+            echo json_encode(['success' => false, 'message' => 'An error occurred, please try again 2!']);
         }
         exit;
     } else {
-        echo json_encode(['success' => false, 'message' => 'An error occurred, please try again!']);
+        echo json_encode(['success' => false, 'message' => 'An error occurred, please try again 3!']);
         exit;
     }
+}
+
+function getCountDependent()
+{
+    $serverName = "MAY-20240306LJN";
+    $connectionOptions = array(
+        "Database" => "Registration_Form",
+        "Uid" => "sa",
+        "PWD" => "sa",
+        "CharacterSet" => "UTF-8"
+    );
+
+    $conn = sqlsrv_connect($serverName, $connectionOptions);
+
+    if ($conn === false) {
+        return 0;
+    }
+
+    // Truy vấn SQL để lấy tổng số count_dependent
+    $sql = "SELECT SUM(count_dependent) as count FROM registration";
+    $stmt = sqlsrv_query($conn, $sql);
+
+    if ($stmt === false) {
+        return 0;
+    }
+
+    // Lấy kết quả từ truy vấn
+    $result = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
+    if ($result) {
+        $count = $result['count'] ?? 0;
+    } else {
+        $count = 0;
+    }
+
+    // Đóng kết nối
+    sqlsrv_free_stmt($stmt);
+    sqlsrv_close($conn);
+
+    return $count;
 }
 ?>
 
@@ -105,16 +156,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-    <div class="homepage">
-        <div class="uk-container uk-container-center">
+    <div class="homepage sky">
+        <div class="uk-container uk-container-center" id="wrap-container">
             <div class="uk-grid uk-grid-collapse">
                 <div class="uk-width-small-1-1 uk-width-medium-1-2" style="text-align: center;">
                     <div class="text bling-overlay">
-                        <img src="/resources/img/TEXTTTT.png" alt="">
+                        <img src="resources/img/TEXTTTT.png" alt="">
                     </div>
                 </div>
                 <div class="uk-width-small-1-1 uk-width-medium-1-2 relative">
-                    <div class="invitation"><img src="/resources/img/invitation.png" alt=""></div>
+                    <div class="invitation"><img src="resources/img/invitation.png" alt=""></div>
                     <div class="timeline">
                         <div class="uk-grid uk-grid-large">
                             <div class="uk-width-2-5">
@@ -122,9 +173,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="time-container">
                                         <div class="time-start">17:30 - 18:15</div>
                                         <div class="time-img uk-flex uk-flex-right">
-                                            <div class="time-img-item img-scaledown"><img src="/resources/img/1.png" alt=""></div>
-                                            <div class="time-img-item img-scaledown"><img src="/resources/img/2.png" alt=""></div>
-                                            <div class="time-img-item img-scaledown"><img src="/resources/img/3.png" alt=""></div>
+                                            <div class="time-img-item img-scaledown"><img src="resources/img/1.png" alt=""></div>
+                                            <div class="time-img-item img-scaledown"><img src="resources/img/2.png" alt=""></div>
+                                            <div class="time-img-item img-scaledown"><img src="resources/img/3.png" alt=""></div>
                                         </div>
                                     </div>
                                 </div>
@@ -150,13 +201,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="time-start">18:15 - 20:45</div>
                                         <div class="time-img">
                                             <div class="uk-flex uk-flex-right" style="padding-right: 35px;">
-                                                <div class="time-img-item img-scaledown mb30"><img src="/resources/img/4.png" alt=""></div>
-                                                <div class="time-img-item img-scaledown mb30"><img src="/resources/img/5.png" alt=""></div>
+                                                <div class="time-img-item img-scaledown mb30"><img src="resources/img/4.png" alt=""></div>
+                                                <div class="time-img-item img-scaledown mb30"><img src="resources/img/5.png" alt=""></div>
                                             </div>
                                             <div class="uk-flex uk-flex-right">
-                                                <div class="time-img-item img-scaledown"><img src="/resources/img/8.png" alt=""></div>
-                                                <div class="time-img-item-2 img-scaledown"><img src="/resources/img/thia.png" alt=""></div>
-                                                <div class="time-img-item img-scaledown"><img src="/resources/img/6.png" alt=""></div>
+                                                <div class="time-img-item img-scaledown"><img src="resources/img/8.png" alt=""></div>
+                                                <div class="time-img-item-2 img-scaledown"><img src="resources/img/thia.png" alt=""></div>
+                                                <div class="time-img-item img-scaledown"><img src="resources/img/6.png" alt=""></div>
                                             </div>
                                         </div>
                                     </div>
@@ -189,8 +240,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="time-start">20:45 to Closing</div>
                                         <div class="time-img uk-flex uk-flex-right">
 
-                                            <div class="time-img-item img-scaledown"><img src="/resources/img/9.png" alt=""></div>
-                                            <div class="time-img-item img-scaledown"><img src="/resources/img/10.png" alt=""></div>
+                                            <div class="time-img-item img-scaledown"><img src="resources/img/9.png" alt=""></div>
+                                            <div class="time-img-item img-scaledown"><img src="resources/img/10.png" alt=""></div>
                                         </div>
                                     </div>
                                 </div>
@@ -211,29 +262,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="uk-grid uk-grid-small">
                             <div class="uk-width-small-1-1 uk-width-medium-1-2">
                                 <div class="content ">
-                                    <div class="content-img"><img src="/resources/img/Join Us_.png" alt=""></div>
+                                    <div class="content-img"><img src="resources/img/Join Us_.png" alt=""></div>
                                     <div class="description uk-text-center">Cuu Long Year End Party will be more complete <br> with your presence. Please confirm your <br> participation so we can welcome you and your <br> family in the most thorough way!</div>
                                     <div class="uk-text-right">Best regards</div>
                                 </div>
                             </div>
                             <div class="uk-width-small-1-1 uk-width-medium-1-2">
                                 <form action="" method="post">
-                                    <div class="uk-grid uk-grid-medium">
+                                    <div class="uk-grid uk-grid-small">
                                         <div class="uk-width-3-5">
-                                            <div class="uk-grid uk-grid-medium">
-                                                <div class="uk-width-1-2 mb20">
-                                                    <div class="form-field">
+                                            <div class="uk-grid uk-grid-small">
+                                                <div class="uk-width-1-2">
+                                                    <div class="form-field mb20">
                                                         <label for="">Staff name</label>
                                                         <input type="text" required id="name" name="name">
                                                     </div>
-                                                </div>
-                                                <div class="uk-width-1-2 mb20">
-                                                    <div class="form-field">
-                                                        <label for="">Company Email</label>
-                                                        <input type="text" required id="Email" name="Email">
-                                                    </div>
-                                                </div>
-                                                <div class="uk-width-1-2 ">
                                                     <div class="form-field">
                                                         <label for="">Department</label>
                                                         <div>
@@ -252,23 +295,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                             </select>
                                                         </div>
                                                     </div>
+                                                    <button class="btn-submit" id="submitBtn">Feedback</button>
                                                 </div>
-                                                <div class="uk-width-1-2 ">
+                                                <div class="uk-width-1-2">
+                                                    <div class="form-field mb20">
+                                                        <label for="">Company Email</label>
+                                                        <input type="text" required id="Email" name="Email">
+                                                    </div>
                                                     <div class="form-field">
                                                         <label for="">Telephone</label>
                                                         <input type="text" required id="phone" name="phone">
                                                     </div>
-
                                                 </div>
-
                                             </div>
-                                            <button class="btn-submit" id="submitBtn">Feedback</button>
                                         </div>
                                         <div class="uk-width-2-5">
-                                            <div class="form-field">
-                                                <label for="">Dependants - DOB</label>
+                                            <div class="form-field" id="wrap-dependants">
+                                                <label for="">Dependants - DOB (<span class="count-dependants">1</span>)</label>
                                                 <div class="relative" id="input-container">
-                                                    <input type="text" required id="phone" name="dependants">
+                                                    <input type="text" required class="item-dependant" name="dependants[]" placeholder="Ex: Cao Van An - 2020">
                                                     <!-- <textarea id="limitedTextarea" rows="8" name="dependants" style="resize: none; overflow: hidden;"></textarea> -->
                                                     <button class="butn add-btn" type="button">
                                                         <svg width="15px" height="15px" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -283,17 +328,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- <div class="form-field uk-flex mb20 form-radio-va">
-                                        <input type="radio" name="answer" id="opt1" value="yes" required>
-                                        <label for="opt1" class="label1" style="margin-right: 15px">
-                                            <span>Yes</span>
-                                        </label>
-                                        <input type="radio" name="answer" id="opt2" value="no" required>
-                                        <label for="opt2" class="label2">
-                                            <span>No</span>
-                                        </label>
-                                    </div> -->
                                 </form>
                             </div>
                         </div>
@@ -333,7 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="total-fixed">
                 Number of Registered People:
                 <br />
-                <span>02-Jan-2024: <strong>670</strong></span>
+                <span>02-Jan-2024: <strong class="count-dependent"><?php echo $countDependent ?></strong></span>
             </div>
         </div>
     </div>
@@ -343,13 +377,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         $(document).ready(function() {
-            const maxInputs = 3;
             $(document).on('click', '.add-btn', function() {
                 const currentInputs = $('#input-container .input-group').length;
-                if (currentInputs < maxInputs) {
-                    const newInputGroup = `
+                const newInputGroup = `
                     <div class="input-group mt10">
-                        <input type="text" required name="dependants">
+                        <input type="text" required class="item-dependant" placeholder="Ex: Cao Van An - 2020" name="dependants[]">
                         <button class="butn remove-btn" type="button" aria-label="Xóa điểm dừng">
                             <svg width="15px" height="15px" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                                 <g id="Home-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -361,16 +393,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </button>
                     </div>
                     `;
-                    $('#input-container').append(newInputGroup);
-
-                }
-
+                $('#input-container').append(newInputGroup);
+                $('.count-dependants').html($('.item-dependant').length)
             });
 
             // Sự kiện click cho nút xóa (-)
             $(document).on('click', '.remove-btn', function() {
                 // Xóa input-group hiện tại
                 $(this).closest('.input-group').remove();
+                $('.count-dependants').html($('.item-dependant').length)
             });
         });
 
@@ -389,6 +420,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.getElementById('submitBtn').addEventListener('click', function(event) {
             event.preventDefault();
             if (validateForm()) {
+                $('#submitBtn').attr('disabled', true);
                 sendData();
             }
         });
@@ -443,8 +475,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     handleData(xhr.responseText);
                 } else {
-                    console.error('Error submitting form:', xhr.statusText);
+                    swal("Error", data.message, "error");
                 }
+                $('#submitBtn').removeAttr('disabled')
             };
 
             // Set up event handler for error
@@ -459,16 +492,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function handleData(response) {
             // Parse the response as needed
             var data = JSON.parse(response);
-            console.log(data)
 
             if (data.success) {
-                // Handle success
+                $('.count-dependent').html(data.count)
                 $('form')[0].reset();
                 swal("Success", data.message, "success");
             } else {
                 swal("Error", data.message, "error");
-
             }
+        }
+
+        var amount = 800;
+        var sky = $('.sky');
+
+        for (var i = 0; i < amount; i++) {
+            var s = $('<div class="star-blink"><div></div></div>');
+            s.css({
+                'top': Math.random() * 100 + '%',
+                'left': Math.random() * 100 + '%',
+                'animation': 'blinkAfter 15s infinite ' + Math.random() * 100 + 's ease-out',
+                'width': Math.random() * 2 + 7 + 'px',
+                'height': Math.random() * 2 + 7 + 'px',
+                'opacity': Math.random() * 5 / 10 + 0.5
+            });
+            if (i % 8 === 0) {
+                s.addClass('red');
+            } else if (i % 10 === 6) {
+                s.addClass('blue');
+            }
+            sky.append(s);
         }
     </script>
 </body>
